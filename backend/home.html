@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Pearl | Home</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <style>
+        /* Fix for top navigation - replaced with 3-dot menu */
+        .menu-container {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+
+        .menu-btn {
+            background: #6a5acd;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            font-size: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+
+        .menu-btn:hover {
+            background: #5a4fb3;
+        }
+
+        .menu-dropdown {
+            display: none;
+            position: absolute;
+            top: 50px;
+            right: 0;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            min-width: 180px;
+            z-index: 1001;
+        }
+
+        .menu-dropdown.show {
+            display: block;
+        }
+
+        .menu-item {
+            padding: 12px 20px;
+            cursor: pointer;
+            color: #333;
+            transition: background 0.2s;
+            border-bottom: 1px solid #eee;
+        }
+
+        .menu-item:last-child {
+            border-bottom: none;
+        }
+
+        .menu-item:hover {
+            background: #f5f5f5;
+        }
+
+        .menu-item.logout {
+            color: #dc3545;
+        }
+
+        /* Make slider text smaller to not overlap */
+        .slide-text {
+            font-size: 28px !important;
+            bottom: 20px !important;
+            left: 20px !important;
+        }
+
+        /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            max-width: 500px;
+            width: 90%;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-header h3 {
+            margin: 0;
+            color: #6a5acd;
+        }
+
+        .close-btn {
+            font-size: 24px;
+            cursor: pointer;
+            border: none;
+            background: none;
+        }
+
+        textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-family: inherit;
+            resize: vertical;
+        }
+    </style>
+    
+    <script>
+        // Check if user is logged in
+        (function() {
+            const token = localStorage.getItem("token");
+            if (!token) {
+                window.location.href = "index.html";
+            }
+        })();
+    </script>
+</head>
+<body>
+
+<!-- 3-Dot Menu -->
+<div class="menu-container">
+    <button class="menu-btn" onclick="toggleMenu()">⋮</button>
+    <div class="menu-dropdown" id="menuDropdown">
+        <div class="menu-item" onclick="location.href='history.html'">📊 History</div>
+        <div class="menu-item" onclick="openFeedback()">💬 Feedback</div>
+        <div class="menu-item" onclick="openReport()">⚠️ Report a Problem</div>
+        <div class="menu-item logout" onclick="logout()">🚪 Logout</div>
+    </div>
+</div>
+
+<!-- Feedback Modal -->
+<div id="feedbackModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>💬 Feedback</h3>
+            <button class="close-btn" onclick="closeFeedback()">&times;</button>
+        </div>
+        <textarea id="feedbackText" rows="5" placeholder="Enter your feedback here..."></textarea>
+        <div style="display: flex; gap: 10px; margin-top: 20px;">
+            <button class="login-btn" style="flex: 1;" onclick="submitFeedback()">Submit</button>
+            <button class="signup-btn" style="flex: 1;" onclick="closeFeedback()">Cancel</button>
+        </div>
+    </div>
+</div>
+
+<!-- Report Modal -->
+<div id="reportModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>⚠️ Report a Problem</h3>
+            <button class="close-btn" onclick="closeReport()">&times;</button>
+        </div>
+        <textarea id="reportText" rows="5" placeholder="Describe the problem..."></textarea>
+        <div style="display: flex; gap: 10px; margin-top: 20px;">
+            <button class="login-btn" style="flex: 1;" onclick="submitReport()">Submit</button>
+            <button class="signup-btn" style="flex: 1;" onclick="closeReport()">Cancel</button>
+        </div>
+    </div>
+</div>
+
+<!-- HERO SLIDER -->
+<div id="heroCarousel" class="carousel slide" data-bs-ride="carousel" data-bs-interval="2000">
+    <div class="carousel-inner">
+        <div class="carousel-item active" onclick="goDetail('Oily Skin')">
+            <div class="hero-slide">
+                <img src="images/oily.png" alt="Oily Skin">
+                <div class="slide-text">OILY SKIN</div>
+            </div>
+        </div>
+        <div class="carousel-item" onclick="goDetail('Sensitive Skin')">
+            <div class="hero-slide">
+                <img src="images/sensitive.png" alt="Sensitive Skin">
+                <div class="slide-text">SENSITIVE SKIN</div>
+            </div>
+        </div>
+        <div class="carousel-item" onclick="goDetail('Dry Skin')">
+            <div class="hero-slide">
+                <img src="images/dry.png" alt="Dry Skin">
+                <div class="slide-text">DRY SKIN</div>
+            </div>
+        </div>
+        <div class="carousel-item" onclick="goDetail('Acne-Prone Skin')">
+            <div class="hero-slide">
+                <img src="images/acne.png" alt="Acne Prone Skin">
+                <div class="slide-text">ACNE-PRONE SKIN</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- PRODUCT CIRCLES -->
+<div class="circle-section">
+    <div onclick="goDetail('Cleanser')">
+        <div class="circle">
+            <img src="images/cleanser.jpg">
+        </div>
+        <p>Cleanser</p>
+    </div>
+    <div onclick="goDetail('Moisturizer')">
+        <div class="circle">
+            <img src="images/moisturizer.jpeg">
+        </div>
+        <p>Moisturizer</p>
+    </div>
+    <div onclick="goDetail('Serum')">
+        <div class="circle">
+            <img src="images/serum.jpg">
+        </div>
+        <p>Serum</p>
+    </div>
+    <div onclick="goDetail('Sunscreen')">
+        <div class="circle">
+            <img src="images/sunscreen.jpg">
+        </div>
+        <p>Sunscreen</p>
+    </div>
+</div>
+
+<!-- ANALYZE SECTION -->
+<div class="analyze-section">
+    <h2>Analyze Your Skin with AI</h2>
+    <p>Upload or capture a selfie to get instant skin insights</p>
+    <button onclick="location.href='analyze.html'">Analyze</button>
+</div>
+
+<!-- INGREDIENT CARDS -->
+<div class="container my-5">
+    <div class="row g-4">
+        <div class="col-md-6" onclick="goDetail('Vitamin C')">
+            <div class="ingredient-card">
+                <h4>Vitamin C</h4>
+                <p>Brightens skin and improves glow</p>
+            </div>
+        </div>
+        <div class="col-md-6" onclick="goDetail('Salicylic Acid')">
+            <div class="ingredient-card">
+                <h4>Salicylic Acid</h4>
+                <p>Reduces acne and unclogs pores</p>
+            </div>
+        </div>
+        <div class="col-md-6" onclick="goDetail('Niacinamide')">
+            <div class="ingredient-card">
+                <h4>Niacinamide</h4>
+                <p>Controls oil and minimizes pores</p>
+            </div>
+        </div>
+        <div class="col-md-6" onclick="goDetail('AHA / BHA')">
+            <div class="ingredient-card">
+                <h4>AHA / BHA</h4>
+                <p>Exfoliates and smoothens skin</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="script.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    function toggleMenu() {
+        document.getElementById("menuDropdown").classList.toggle("show");
+    }
+
+    // Close menu when clicking outside
+    window.onclick = function(event) {
+        const menu = document.getElementById("menuDropdown");
+        const feedbackModal = document.getElementById("feedbackModal");
+        const reportModal = document.getElementById("reportModal");
+        
+        if (!event.target.matches('.menu-btn') && menu.classList.contains('show')) {
+            menu.classList.remove('show');
+        }
+        
+        if (event.target == feedbackModal) {
+            closeFeedback();
+        }
+        
+        if (event.target == reportModal) {
+            closeReport();
+        }
+    }
+
+    function logout() {
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        window.location.href = "index.html";
+    }
+
+    function goDetail(type) {
+        if (type === 'Oily Skin') {
+            window.location.href = 'oily.html';
+        } else if (type === 'Sensitive Skin') {
+            window.location.href = 'sensitive.html';
+        } else if (type === 'Dry Skin') {
+            window.location.href = 'dry.html';
+        } else if (type === 'Acne-Prone Skin') {
+            window.location.href = 'acne.html';
+        } else if (type === 'Cleanser') {
+            window.location.href = 'cleanser.html';
+        } else if (type === 'Moisturizer') {
+            window.location.href = 'moisturizer.html';
+        } else if (type === 'Serum') {
+            window.location.href = 'serum.html';
+        } else if (type === 'Sunscreen') {
+            window.location.href = 'sunscreen.html';
+        } else if (type === 'Vitamin C') {
+            window.location.href = 'Vitaminc.html';
+        } else if (type === 'AHA / BHA') {
+            window.location.href = 'aha.html';
+        } else if (type === 'Salicylic Acid') {
+            window.location.href = 'Salicylic.html';
+        } else if (type === 'Niacinamide') {
+            window.location.href = 'Niacinamide.html';
+        }
+    }
+
+    function openFeedback() {
+        document.getElementById("menuDropdown").classList.remove("show");
+        document.getElementById("feedbackModal").style.display = "flex";
+    }
+
+    function closeFeedback() {
+        document.getElementById("feedbackModal").style.display = "none";
+        document.getElementById("feedbackText").value = "";
+    }
+
+    function submitFeedback() {
+        const feedback = document.getElementById("feedbackText").value;
+        if (feedback.trim()) {
+            alert("Thank you for your feedback!");
+            closeFeedback();
+        } else {
+            alert("Please enter your feedback");
+        }
+    }
+
+    function openReport() {
+        document.getElementById("menuDropdown").classList.remove("show");
+        document.getElementById("reportModal").style.display = "flex";
+    }
+
+    function closeReport() {
+        document.getElementById("reportModal").style.display = "none";
+        document.getElementById("reportText").value = "";
+    }
+
+    function submitReport() {
+        const report = document.getElementById("reportText").value;
+        if (report.trim()) {
+            alert("Thank you for reporting! We'll look into it.");
+            closeReport();
+        } else {
+            alert("Please describe the problem");
+        }
+    }
+</script>
+
+<!-- Carousel Auto-Slide Script -->
+<script>
+    // Force carousel to auto-slide from left to right
+    document.addEventListener('DOMContentLoaded', function() {
+        var carouselElement = document.getElementById('heroCarousel');
+        if (carouselElement) {
+            var carousel = new bootstrap.Carousel(carouselElement, {
+                interval: 2000,
+                ride: 'carousel',
+                wrap: true
+            });
+        }
+    });
+</script>
+
+</body>
+</html>
