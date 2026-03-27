@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="config.js"></script>
+    <title>My Profile | Pure & Flush</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .history-container {
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        .history-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .history-date {
+            color: #666;
+            font-size: 14px;
+        }
+        .history-skin {
+            font-size: 20px;
+            font-weight: bold;
+            color: #6a5acd;
+        }
+        .logout-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            padding: 8px 16px;
+            background: #6a5acd;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+<button class="logout-btn" onclick="logout()">Logout</button>
+
+<div class="history-container">
+    <h2 style="color: #6a5acd;">📊 My Skin Analysis History</h2>
+    <div id="historyList"></div>
+</div>
+
+<script>
+    const token = localStorage.getItem("token");
+    if (!token) {
+        window.location.href = "index.html";
+    }
+
+    function logout() {
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        window.location.href = "index.html";
+    }
+
+    async function loadHistory() {
+        try {
+            const response = await fetch(BASE_URL + "/api/history", {
+                headers: {
+                    "Authorization": "Bearer " + token
+                }
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok) {
+                displayHistory(data.history);
+            } else {
+                document.getElementById("historyList").innerHTML = 
+                    "<p>Error loading history</p>";
+            }
+        } catch (error) {
+            document.getElementById("historyList").innerHTML = 
+                "<p>Cannot connect to server</p>";
+        }
+    }
+
+    function displayHistory(history) {
+        const container = document.getElementById("historyList");
+        
+        if (history.length === 0) {
+            container.innerHTML = "<p>No analysis history yet. Try analyzing your skin!</p>";
+            return;
+        }
+        
+        let html = "";
+        history.forEach(item => {
+            const date = new Date(item.date).toLocaleString();
+            const confidence = (item.confidence * 100).toFixed(1);
+            
+            html += `
+                <div class="history-card">
+                    <div class="history-date">📅 ${date}</div>
+                    <div class="history-skin">🧴 ${item.skin_type}</div>
+                    <div>📊 Confidence: ${confidence}%</div>
+                    <div style="margin-top: 10px;">
+                        <strong>⚠ Issues:</strong> ${item.issues.join(", ")}
+                    </div>
+                    <div style="margin-top: 5px;">
+                        <strong>💊 Recommendations:</strong> ${item.recommendations.join(", ")}
+                    </div>
+                </div>
+            `;
+        });
+        
+        container.innerHTML = html;
+    }
+
+    loadHistory();
+</script>
+
+</body>
+</html>

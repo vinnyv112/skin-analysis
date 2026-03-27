@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="config.js"></script>
+    <title>Details</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="detail-page">
+
+<h1 id="title"></h1>
+
+<script>
+    const params = new URLSearchParams(window.location.search);
+    document.getElementById("title").innerText = params.get("title");
+</script>
+
+</body>
+</html>

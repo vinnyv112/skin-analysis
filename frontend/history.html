@@ -1,0 +1,983 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <script src="config.js"></script>
+    <title>Analysis History | Pure & Flush</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #c3b6ff, #b8e1ff, #ffd6eb);
+            min-height: 100vh;
+        }
+
+        /* Menu Button (3 dots) */
+        .menu-container {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+
+        .menu-btn {
+            background: #6a5acd;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            font-size: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .menu-btn:hover {
+            background: #5a4fb3;
+        }
+
+        .menu-dropdown {
+            display: none;
+            position: absolute;
+            top: 50px;
+            right: 0;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            min-width: 180px;
+            z-index: 1001;
+        }
+
+        .menu-dropdown.show {
+            display: block;
+        }
+
+        .menu-item {
+            padding: 12px 20px;
+            cursor: pointer;
+            color: #333;
+            transition: background 0.2s;
+            border-bottom: 1px solid #eee;
+        }
+
+        .menu-item:last-child {
+            border-bottom: none;
+        }
+
+        .menu-item:hover {
+            background: #f5f5f5;
+        }
+
+        .menu-item.logout {
+            color: #dc3545;
+        }
+
+        .menu-item.active {
+            background: #f0f0ff;
+            color: #6a5acd;
+            font-weight: bold;
+        }
+
+        .history-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 80px 20px 40px;
+        }
+
+        .history-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .history-header h1 {
+            color: #6a5acd;
+            margin: 0;
+        }
+
+        .back-btn {
+            padding: 10px 20px;
+            background: white;
+            color: #6a5acd;
+            border: 1px solid #6a5acd;
+            border-radius: 6px;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .back-btn:hover {
+            background: #6a5acd;
+            color: white;
+        }
+
+        /* Dashboard Styles */
+        .dashboard-container {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .dashboard-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #6a5acd;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Filter Dropdown Button (3 dots) */
+        .filter-menu-container {
+            position: relative;
+        }
+
+        .filter-menu-btn {
+            background: #f0f0f0;
+            border: none;
+            border-radius: 50%;
+            width: 36px;
+            height: 36px;
+            font-size: 18px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .filter-menu-btn:hover {
+            background: #6a5acd;
+            color: white;
+        }
+
+        .filter-dropdown {
+            display: none;
+            position: absolute;
+            top: 45px;
+            right: 0;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            min-width: 250px;
+            z-index: 1001;
+            padding: 15px;
+        }
+
+        .filter-dropdown.show {
+            display: block;
+        }
+
+        .filter-group {
+            margin-bottom: 15px;
+        }
+
+        .filter-label {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+
+        .filter-select {
+            width: 100%;
+            padding: 8px 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 13px;
+            background: white;
+            cursor: pointer;
+        }
+
+        .filter-select:focus {
+            outline: none;
+            border-color: #6a5acd;
+        }
+
+        .apply-filters-btn {
+            width: 100%;
+            padding: 10px;
+            background: #6a5acd;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+
+        .apply-filters-btn:hover {
+            background: #5a4fb3;
+        }
+
+        .clear-filters {
+            text-align: center;
+            margin-top: 10px;
+            font-size: 12px;
+            color: #dc3545;
+            cursor: pointer;
+            text-decoration: underline;
+        }
+
+        .month-tabs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 15px 0 10px;
+            border-bottom: 2px solid #f0f0f0;
+            padding-bottom: 10px;
+        }
+
+        .month-tab {
+            padding: 8px 16px;
+            border-radius: 20px;
+            background: #f0f0f0;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .month-tab:hover {
+            background: #e0e0e0;
+        }
+
+        .month-tab.active {
+            background: #6a5acd;
+            color: white;
+        }
+
+        .active-filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+            font-size: 12px;
+            color: #666;
+        }
+
+        .filter-tag {
+            background: #e8e8ff;
+            color: #6a5acd;
+            padding: 4px 10px;
+            border-radius: 16px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .remove-filter {
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .remove-filter:hover {
+            color: #dc3545;
+        }
+
+        .history-card {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s;
+        }
+
+        .history-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .history-date {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .history-skin {
+            font-size: 24px;
+            font-weight: bold;
+            color: #6a5acd;
+            margin-bottom: 15px;
+        }
+
+        .confidence-badge {
+            display: inline-block;
+            padding: 5px 12px;
+            background: linear-gradient(135deg, #c3b6ff, #b8e1ff);
+            border-radius: 20px;
+            font-size: 14px;
+            margin-bottom: 15px;
+        }
+
+        .section-label {
+            font-weight: 600;
+            color: #555;
+            margin: 15px 0 5px;
+        }
+
+        .tags-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 5px;
+        }
+
+        .tag {
+            background: #f0f0f0;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            color: #333;
+        }
+
+        .no-history {
+            text-align: center;
+            padding: 60px 20px;
+            background: white;
+            border-radius: 12px;
+            color: #666;
+        }
+
+        .no-history p {
+            margin: 15px 0;
+            font-size: 18px;
+        }
+
+        .analyze-now-btn {
+            display: inline-block;
+            padding: 12px 30px;
+            background: #6a5acd;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            margin-top: 20px;
+        }
+
+        .analyze-now-btn:hover {
+            background: #5a4fb3;
+        }
+
+        /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            max-width: 500px;
+            width: 90%;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-header h3 {
+            margin: 0;
+            color: #6a5acd;
+        }
+
+        .close-btn {
+            font-size: 24px;
+            cursor: pointer;
+            border: none;
+            background: none;
+        }
+
+        textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-family: inherit;
+            resize: vertical;
+        }
+
+        .recommendation-item {
+            background: #f9f9f9;
+            border: 1px solid #eee;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            width: 100%;
+        }
+
+        .rec-title {
+            font-weight: bold;
+            color: #6a5acd;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Menu Button (3 dots) -->
+    <div class="menu-container">
+        <button class="menu-btn" onclick="toggleMenu()">⋮</button>
+        <div class="menu-dropdown" id="menuDropdown">
+            <div class="menu-item active" onclick="location.href='history.html'">📊 History</div>
+            <div class="menu-item" onclick="openFeedback()">💬 Feedback</div>
+            <div class="menu-item" onclick="openReport()">⚠️ Report a Problem</div>
+            <div class="menu-item logout" onclick="logout()">🚪 Logout</div>
+        </div>
+    </div>
+
+    <!-- Feedback Modal -->
+    <div id="feedbackModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>💬 Feedback</h3>
+                <button class="close-btn" onclick="closeFeedback()">&times;</button>
+            </div>
+            <textarea id="feedbackText" rows="5" placeholder="Enter your feedback here..."></textarea>
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <button class="back-btn" style="flex: 1;" onclick="submitFeedback()">Submit</button>
+                <button class="back-btn" style="flex: 1; background: #dc3545; color: white; border-color: #dc3545;"
+                    onclick="closeFeedback()">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Report Modal -->
+    <div id="reportModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>⚠️ Report a Problem</h3>
+                <button class="close-btn" onclick="closeReport()">&times;</button>
+            </div>
+            <textarea id="reportText" rows="5" placeholder="Describe the problem..."></textarea>
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <button class="back-btn" style="flex: 1;" onclick="submitReport()">Submit</button>
+                <button class="back-btn" style="flex: 1; background: #dc3545; color: white; border-color: #dc3545;"
+                    onclick="closeReport()">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="history-container">
+        <div class="history-header">
+            <h1>📊 My Skin Analysis History</h1>
+            <a href="analyse.html" class="back-btn">← New Analysis</a>
+        </div>
+
+        <!-- Dashboard Section -->
+        <div class="dashboard-container">
+            <div class="dashboard-header">
+                <div class="dashboard-title">
+                    <span>📋 Analytics Dashboard</span>
+                </div>
+                <!-- Filter Dropdown (3 dots) -->
+                <div class="filter-menu-container">
+                    <button class="filter-menu-btn" onclick="toggleFilterMenu(event)">⋮</button>
+                    <div class="filter-dropdown" id="filterDropdown" onclick="event.stopPropagation()">
+                        <div class="filter-group">
+                            <div class="filter-label">Filter by Skin Type</div>
+                            <select class="filter-select" id="skinTypeFilter">
+                                <option value="all">All Skin Types</option>
+                                <option value="dry">Dry Skin</option>
+                                <option value="normal">Normal Skin</option>
+                                <option value="oily">Oily Skin</option>
+                            </select>
+                        </div>
+
+                        <div class="filter-group">
+                            <div class="filter-label">Sort By</div>
+                            <select class="filter-select" id="sortFilter">
+                                <option value="newest">Newest First</option>
+                                <option value="oldest">Oldest First</option>
+                            </select>
+                        </div>
+
+                        <div class="filter-group">
+                            <div class="filter-label">Time Period</div>
+                            <select class="filter-select" id="timeFilter">
+                                <option value="all">All Time</option>
+                                <option value="7days">Last 7 Days</option>
+                                <option value="30days">Last 30 Days</option>
+                                <option value="thisMonth">This Month</option>
+                                <option value="lastMonth">Last Month</option>
+                            </select>
+                        </div>
+
+                        <button class="apply-filters-btn" onclick="applyFilters()">Apply Filters</button>
+                        <div class="clear-filters" onclick="clearAllFilters()">Clear All Filters</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Month Tabs -->
+            <div class="month-tabs" id="monthTabs"></div>
+
+            <!-- Active Filters -->
+            <div class="active-filters" id="activeFilters"></div>
+        </div>
+
+        <div id="historyList"></div>
+    </div>
+
+    <script>
+        const token = localStorage.getItem("token");
+        if (!token) {
+            window.location.href = "index.html";
+        }
+
+        let allHistory = [];
+        let filteredHistory = [];
+        let currentMonth = null;
+        let activeFilters = {
+            skinType: 'all',
+            sortBy: 'newest',
+            timePeriod: 'all',
+            month: null
+        };
+
+        // Month names
+        const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+
+        function toggleMenu() {
+            document.getElementById("menuDropdown").classList.toggle("show");
+        }
+
+        function toggleFilterMenu(event) {
+            event.stopPropagation();
+            const dropdown = document.getElementById("filterDropdown");
+            dropdown.classList.toggle("show");
+        }
+
+        // Close dropdown when clicking outside
+        window.onclick = function (event) {
+            const menu = document.getElementById("menuDropdown");
+            const filterDropdown = document.getElementById("filterDropdown");
+            const feedbackModal = document.getElementById("feedbackModal");
+            const reportModal = document.getElementById("reportModal");
+
+            if (!event.target.matches('.menu-btn') && menu.classList.contains('show')) {
+                menu.classList.remove('show');
+            }
+
+            // Only close if click is outside the filter dropdown AND not on the filter button
+            if (!event.target.matches('.filter-menu-btn') && 
+                !filterDropdown.contains(event.target) && 
+                filterDropdown.classList.contains('show')) {
+                filterDropdown.classList.remove('show');
+            }
+
+            if (event.target == feedbackModal) {
+                closeFeedback();
+            }
+
+            if (event.target == reportModal) {
+                closeReport();
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem("token");
+            localStorage.removeItem("user");
+            window.location.href = "index.html";
+        }
+
+        function openFeedback() {
+            document.getElementById("menuDropdown").classList.remove("show");
+            document.getElementById("feedbackModal").style.display = "flex";
+        }
+
+        function closeFeedback() {
+            document.getElementById("feedbackModal").style.display = "none";
+            document.getElementById("feedbackText").value = "";
+        }
+
+        async function submitFeedback() {
+            const feedback = document.getElementById("feedbackText").value;
+            if (!feedback.trim()) {
+                alert("Please enter your feedback");
+                return;
+            }
+
+            try {
+                const response = await fetch(BASE_URL + "/api/feedback", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": "Bearer " + token
+                    },
+                    body: JSON.stringify({
+                        type: "feedback",
+                        message: feedback
+                    })
+                });
+
+                if (response.ok) {
+                    alert("✅ Thank you for your feedback!");
+                    closeFeedback();
+                } else {
+                    alert("❌ Error submitting feedback");
+                }
+            } catch (error) {
+                alert("❌ Cannot connect to server");
+            }
+        }
+
+        function openReport() {
+            document.getElementById("menuDropdown").classList.remove("show");
+            document.getElementById("reportModal").style.display = "flex";
+        }
+
+        function closeReport() {
+            document.getElementById("reportModal").style.display = "none";
+            document.getElementById("reportText").value = "";
+        }
+
+        async function submitReport() {
+            const report = document.getElementById("reportText").value;
+            if (!report.trim()) {
+                alert("Please describe the problem");
+                return;
+            }
+
+            try {
+                const response = await fetch(BASE_URL + "/api/feedback", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": "Bearer " + token
+                    },
+                    body: JSON.stringify({
+                        type: "report",
+                        message: report
+                    })
+                });
+
+                if (response.ok) {
+                    alert("✅ Thank you for reporting!");
+                    closeReport();
+                } else {
+                    alert("❌ Error submitting report");
+                }
+            } catch (error) {
+                alert("❌ Cannot connect to server");
+            }
+        }
+
+        async function loadHistory() {
+            const container = document.getElementById("historyList");
+            
+            try {
+                const response = await fetch(BASE_URL + "/api/history", {
+                    headers: {
+                        "Authorization": "Bearer " + token
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                
+                allHistory = data.history || [];
+                processMonths();
+                
+                // Show only the most recent analysis by default
+                if (allHistory.length > 0) {
+                    const sorted = [...allHistory].sort((a, b) => new Date(b.date) - new Date(a.date));
+                    filteredHistory = [sorted[0]]; // Only the most recent one
+                } else {
+                    filteredHistory = [];
+                }
+                
+                displayHistory(filteredHistory);
+                
+            } catch (error) {
+                console.error("Error loading history:", error);
+                container.innerHTML = `
+                    <div class="no-history">
+                        <p>❌ Cannot connect to server</p>
+                        <p style="font-size: 14px; color: #dc3545;">Make sure Flask is running on port 5000</p>
+                        <button onclick="location.reload()" class="analyze-now-btn" style="background: #6a5acd;">Retry</button>
+                    </div>
+                `;
+            }
+        }
+
+        function processMonths() {
+            // Get unique months from history
+            const months = new Set();
+            allHistory.forEach(item => {
+                const date = new Date(item.date);
+                const monthKey = `${date.getFullYear()}-${date.getMonth()}`;
+                months.add(monthKey);
+            });
+
+            // Convert to array and sort (newest first)
+            const sortedMonths = Array.from(months).sort().reverse();
+            
+            // Generate month tabs
+            let monthTabsHtml = '<div class="month-tab" onclick="filterByMonth(null)">📅 All Months</div>';
+            
+            sortedMonths.forEach(monthKey => {
+                const [year, month] = monthKey.split('-');
+                const monthName = monthNames[parseInt(month)];
+                const displayName = `${monthName} ${year}`;
+                const isActive = currentMonth === monthKey;
+                monthTabsHtml += `<div class="month-tab ${isActive ? 'active' : ''}" onclick="filterByMonth('${monthKey}')">${displayName}</div>`;
+            });
+
+            document.getElementById('monthTabs').innerHTML = monthTabsHtml;
+        }
+
+        function filterByMonth(monthKey) {
+            currentMonth = monthKey;
+            activeFilters.month = monthKey;
+            processMonths(); // Refresh tabs to show active state
+            applyFilters();
+        }
+
+        function applyFilters() {
+            // Get filter values
+            activeFilters.skinType = document.getElementById('skinTypeFilter').value;
+            activeFilters.sortBy = document.getElementById('sortFilter').value;
+            activeFilters.timePeriod = document.getElementById('timeFilter').value;
+
+            // Apply filters
+            filteredHistory = [...allHistory];
+
+            // Filter by month
+            if (activeFilters.month) {
+                const [year, month] = activeFilters.month.split('-');
+                filteredHistory = filteredHistory.filter(item => {
+                    const date = new Date(item.date);
+                    return date.getFullYear() === parseInt(year) && date.getMonth() === parseInt(month);
+                });
+            }
+
+            // Filter by skin type
+            if (activeFilters.skinType !== 'all') {
+                filteredHistory = filteredHistory.filter(item => 
+                    item.skin_type.toLowerCase().includes(activeFilters.skinType.toLowerCase())
+                );
+            }
+
+            // Filter by time period
+            const now = new Date();
+            if (activeFilters.timePeriod === '7days') {
+                const cutoff = new Date(now.setDate(now.getDate() - 7));
+                filteredHistory = filteredHistory.filter(item => new Date(item.date) >= cutoff);
+            } else if (activeFilters.timePeriod === '30days') {
+                const cutoff = new Date(now.setDate(now.getDate() - 30));
+                filteredHistory = filteredHistory.filter(item => new Date(item.date) >= cutoff);
+            } else if (activeFilters.timePeriod === 'thisMonth') {
+                const currentMonth = now.getMonth();
+                const currentYear = now.getFullYear();
+                filteredHistory = filteredHistory.filter(item => {
+                    const date = new Date(item.date);
+                    return date.getMonth() === currentMonth && date.getFullYear() === currentYear;
+                });
+            } else if (activeFilters.timePeriod === 'lastMonth') {
+                const lastMonth = now.getMonth() === 0 ? 11 : now.getMonth() - 1;
+                const year = now.getMonth() === 0 ? now.getFullYear() - 1 : now.getFullYear();
+                filteredHistory = filteredHistory.filter(item => {
+                    const date = new Date(item.date);
+                    return date.getMonth() === lastMonth && date.getFullYear() === year;
+                });
+            }
+
+            // Sort
+            if (activeFilters.sortBy === 'newest') {
+                filteredHistory.sort((a, b) => new Date(b.date) - new Date(a.date));
+            } else if (activeFilters.sortBy === 'oldest') {
+                filteredHistory.sort((a, b) => new Date(a.date) - new Date(b.date));
+            }
+
+            // Update active filters display
+            updateActiveFilters();
+
+            // Display filtered history
+            displayHistory(filteredHistory);
+
+            // Close dropdown
+            document.getElementById("filterDropdown").classList.remove("show");
+        }
+
+        function updateActiveFilters() {
+            let filtersHtml = '';
+
+            if (activeFilters.skinType !== 'all') {
+                filtersHtml += `<span class="filter-tag">Skin: ${activeFilters.skinType} <span class="remove-filter" onclick="removeFilter('skinType')">×</span></span>`;
+            }
+            if (activeFilters.timePeriod !== 'all') {
+                let timeText = {
+                    '7days': 'Last 7 Days',
+                    '30days': 'Last 30 Days',
+                    'thisMonth': 'This Month',
+                    'lastMonth': 'Last Month'
+                }[activeFilters.timePeriod];
+                filtersHtml += `<span class="filter-tag">${timeText} <span class="remove-filter" onclick="removeFilter('timePeriod')">×</span></span>`;
+            }
+            if (activeFilters.month) {
+                const [year, month] = activeFilters.month.split('-');
+                filtersHtml += `<span class="filter-tag">${monthNames[parseInt(month)]} ${year} <span class="remove-filter" onclick="removeFilter('month')">×</span></span>`;
+            }
+
+            document.getElementById('activeFilters').innerHTML = filtersHtml || '';
+        }
+
+        function removeFilter(filterType) {
+            if (filterType === 'skinType') {
+                document.getElementById('skinTypeFilter').value = 'all';
+                activeFilters.skinType = 'all';
+            } else if (filterType === 'timePeriod') {
+                document.getElementById('timeFilter').value = 'all';
+                activeFilters.timePeriod = 'all';
+            } else if (filterType === 'month') {
+                activeFilters.month = null;
+                currentMonth = null;
+                processMonths();
+            }
+            applyFilters();
+        }
+
+        function clearAllFilters() {
+            document.getElementById('skinTypeFilter').value = 'all';
+            document.getElementById('timeFilter').value = 'all';
+            document.getElementById('sortFilter').value = 'newest';
+            activeFilters = {
+                skinType: 'all',
+                sortBy: 'newest',
+                timePeriod: 'all',
+                month: null
+            };
+            currentMonth = null;
+            processMonths();
+            applyFilters();
+        }
+
+        function displayHistory(history) {
+            const container = document.getElementById("historyList");
+
+            if (!history || history.length === 0) {
+                container.innerHTML = `
+                    <div class="no-history">
+                        <p>📭 No analysis history found</p>
+                        <p style="font-size: 14px;">Try changing your filters or analyze your skin!</p>
+                        <a href="analyse.html" class="analyze-now-btn">Analyze Now</a>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = "";
+            history.forEach(item => {
+                const date = new Date(item.date).toLocaleString();
+                const confidence = (item.confidence * 100).toFixed(1);
+
+                // Handle issues
+                let issuesHtml = "";
+                if (item.issues && item.issues.length > 0) {
+                    item.issues.forEach(issue => {
+                        let bgColor = '#f0f0f0';
+                        if (issue.severity === 'Severe') bgColor = '#ffcdd2';
+                        else if (issue.severity === 'Moderate') bgColor = '#fff9c4';
+                        else if (issue.severity === 'Mild') bgColor = '#e8f5e8';
+                        
+                        issuesHtml += `<span class="tag" style="background: ${bgColor};">${issue.issue} (${issue.severity})</span>`;
+                    });
+                } else {
+                    issuesHtml = `<span class="tag" style="background: #e8f5e8;">Clear Skin</span>`;
+                }
+
+                // Handle recommendations
+                let recommendationsHtml = "";
+                if (item.recommendations && typeof item.recommendations === 'object') {
+                    const rec = item.recommendations;
+                    
+                    if (rec.cleanser) {
+                        recommendationsHtml += `<div class="recommendation-item"><span class="rec-title">🧼 Cleanser:</span> ${rec.cleanser}</div>`;
+                    }
+                    if (rec.toner) {
+                        recommendationsHtml += `<div class="recommendation-item"><span class="rec-title">💧 Toner:</span> ${rec.toner}</div>`;
+                    }
+                    if (rec.serum) {
+                        recommendationsHtml += `<div class="recommendation-item"><span class="rec-title">✨ Serum:</span> ${rec.serum}</div>`;
+                    }
+                    if (rec.moisturizer) {
+                        recommendationsHtml += `<div class="recommendation-item"><span class="rec-title">🧴 Moisturizer:</span> ${rec.moisturizer}</div>`;
+                    }
+                    if (rec.sunscreen) {
+                        recommendationsHtml += `<div class="recommendation-item"><span class="rec-title">☀️ Sunscreen:</span> ${rec.sunscreen}</div>`;
+                    }
+                    if (rec.treatment) {
+                        recommendationsHtml += `<div class="recommendation-item"><span class="rec-title">⚕️ Treatment:</span> ${rec.treatment}</div>`;
+                    }
+                    if (rec.mask) {
+                        recommendationsHtml += `<div class="recommendation-item"><span class="rec-title">🎭 Mask:</span> ${rec.mask}</div>`;
+                    }
+                    if (rec.routine) {
+                        recommendationsHtml += `<div class="recommendation-item" style="white-space: pre-line;"><span class="rec-title">📋 Routine:</span><br>${rec.routine}</div>`;
+                    }
+                }
+
+                html += `
+                    <div class="history-card">
+                        <div class="history-date">📅 ${date}</div>
+                        <div class="history-skin">🧴 ${item.skin_type}</div>
+                        <span class="confidence-badge">Confidence: ${confidence}%</span>
+                        
+                        <div class="section-label">⚠ Detected Concerns:</div>
+                        <div class="tags-container">
+                            ${issuesHtml}
+                        </div>
+                        
+                        <div class="section-label">💊 Recommended Products:</div>
+                        <div class="tags-container" style="display: flex; flex-direction: column; gap: 8px;">
+                            ${recommendationsHtml || '<span class="tag">No recommendations available</span>'}
+                        </div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+        }
+
+        // Load history when page loads
+        document.addEventListener('DOMContentLoaded', loadHistory);
+    </script>
+
+</body>
+
+</html>

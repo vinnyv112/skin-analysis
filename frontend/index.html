@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="config.js"></script>
+    <title>Pure and Flush</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="splash">
+
+<!-- SPLASH SCREEN -->
+<div class="splash-content" id="splash">
+    <img src="images/loogoo.png" class="splash-logo" alt="Pure and Flush Logo">
+</div>
+
+<!-- LOGIN PAGE (HIDDEN FIRST) -->
+<div id="loginPage" class="login-page" style="display:none;">
+    <div class="login-box">
+        <h2>Welcome</h2>
+        <div id="errorMessage" style="color: red; margin-bottom: 10px; display: none;"></div>
+        <input type="text" id="username" placeholder="Username" class="login-input">
+        <input type="password" id="password" placeholder="Password" class="login-input">
+        <button onclick="handleLogin()" class="login-btn">Login</button>
+        <button onclick="handleSignup()" class="signup-btn">Sign Up</button>
+    </div>
+</div>
+
+<script>
+    // After splash → show login
+    setTimeout(() => {
+        document.getElementById("splash").style.opacity = "0";
+        setTimeout(() => {
+            document.body.classList.remove("splash");
+            document.getElementById("splash").style.display = "none";
+            document.getElementById("loginPage").style.display = "flex";
+        }, 800);
+    }, 2500);
+
+    // Show error message
+    function showError(message) {
+        const errorDiv = document.getElementById("errorMessage");
+        errorDiv.style.display = "block";
+        errorDiv.innerText = message;
+        setTimeout(() => {
+            errorDiv.style.display = "none";
+        }, 3000);
+    }
+
+    // LOGIN FUNCTION
+    async function handleLogin() {
+        const username = document.getElementById("username").value;
+        const password = document.getElementById("password").value;
+        
+        if (!username || !password) {
+            showError("Please enter username and password");
+            return;
+        }
+        
+        try {
+            const response = await fetch(BASE_URL + "/api/login", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    username: username,
+                    password: password
+                })
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok) {
+                localStorage.setItem("token", data.access_token);
+                localStorage.setItem("user", JSON.stringify(data.user));
+                window.location.href = "home.html";
+            } else {
+                showError(data.error || "Login failed");
+            }
+        } catch (error) {
+            showError("Cannot connect to server. Make sure Flask is running on port 5000!");
+            console.error(error);
+        }
+    }
+
+    // SIGNUP FUNCTION
+    async function handleSignup() {
+        const username = document.getElementById("username").value;
+        const password = document.getElementById("password").value;
+        
+        if (!username || !password) {
+            showError("Please enter username and password");
+            return;
+        }
+        
+        if (password.length < 6) {
+            showError("Password must be at least 6 characters");
+            return;
+        }
+        
+        try {
+            const response = await fetch(BASE_URL + "/api/signup", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    username: username,
+                    password: password
+                })
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok) {
+                localStorage.setItem("token", data.access_token);
+                localStorage.setItem("user", JSON.stringify(data.user));
+                alert("Signup successful! Welcome " + username);
+                window.location.href = "home.html";
+            } else {
+                showError(data.error || "Signup failed");
+            }
+        } catch (error) {
+            showError("Cannot connect to server. Make sure Flask is running on port 5000!");
+            console.error(error);
+        }
+    }
+</script>
+
+</body>
+</html>
